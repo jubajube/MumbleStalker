@@ -1,4 +1,5 @@
 ipch/
+generated/
 Debug*/
 Release*/
 *.opensdf
