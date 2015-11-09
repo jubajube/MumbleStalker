@@ -18,8 +18,36 @@ namespace MumbleStalkerWin {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow: Window {
+        #region Public Methods
+
         public MainWindow() {
             InitializeComponent();
+            DataContext = Model;
         }
+
+        #endregion
+
+        #region Private Methods
+
+        private void OnAdd(object sender, ExecutedRoutedEventArgs e) {
+            Model.Add();
+        }
+
+        private void OnRemove(object sender, ExecutedRoutedEventArgs e) {
+            Model.Remove(e.Parameter as Server);
+        }
+
+        #endregion
+
+        #region Private Properties
+
+        private MainModel _model = new MainModel();
+        private MainModel Model {
+            get {
+                return _model;
+            }
+        }
+
+        #endregion
     }
 }
