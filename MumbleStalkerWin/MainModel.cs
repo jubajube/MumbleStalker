@@ -11,25 +11,14 @@ using System.Windows.Threading;
 
 namespace MumbleStalkerWin {
 
-    public class MainModel: INotifyPropertyChanged {
+    public class MainModel: ModelObject {
 
         #region Public Properties
 
-        private string _newServerName;
-        public string NewServerName {
+        private ObservableCollection<Meta> _hosts = new ObservableCollection<Meta>();
+        public ObservableCollection<Meta> Hosts {
             get {
-                return _newServerName;
-            }
-            set {
-                _newServerName = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<Server> _servers = new ObservableCollection<Server>();
-        public ObservableCollection<Server> Servers {
-            get {
-                return _servers;
+                return _hosts;
             }
         }
 
@@ -53,31 +42,21 @@ namespace MumbleStalkerWin {
             RefreshTimer.Start();
         }
 
-        public void Add() {
-            Servers.Add(new Server(IceCommunicator, NewServerName));
+        public void Add(string newHostName) {
+            Hosts.Add(new Meta(IceCommunicator, newHostName));
         }
 
-        public void Remove(Server server) {
-            Servers.Remove(server);
+        public void Remove(Meta host) {
+            Hosts.Remove(host);
         }
-
-        #endregion
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
 
         #region Private Methods
 
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         private void OnRefreshTimerTick(object sender, EventArgs e) {
-            foreach (var server in Servers) {
-                server.Refresh();
+            foreach (var host in Hosts) {
+                host.Refresh();
             }
         }
 

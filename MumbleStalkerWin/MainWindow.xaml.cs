@@ -23,18 +23,20 @@ namespace MumbleStalkerWin {
         public MainWindow() {
             InitializeComponent();
             DataContext = Model;
+            NewHostName.Text = Properties.Settings.Default.NewHostName;
+            NewHostName.SelectionStart = NewHostName.Text.Length;
         }
 
         #endregion
 
         #region Private Methods
 
-        private void OnAdd(object sender, ExecutedRoutedEventArgs e) {
-            Model.Add();
+        private void OnAddHost(object sender, ExecutedRoutedEventArgs e) {
+            Model.Add(NewHostName.Text);
         }
 
-        private void OnRemove(object sender, ExecutedRoutedEventArgs e) {
-            Model.Remove(e.Parameter as Server);
+        private void OnRemoveHost(object sender, ExecutedRoutedEventArgs e) {
+            Model.Remove(e.Parameter as Meta);
         }
 
         #endregion
@@ -49,5 +51,10 @@ namespace MumbleStalkerWin {
         }
 
         #endregion
+
+        private void OnNewHostNameTextChanged(object sender, TextChangedEventArgs e) {
+            Properties.Settings.Default.NewHostName = NewHostName.Text;
+            Properties.Settings.Default.Save();
+        }
     }
 }

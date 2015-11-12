@@ -6,46 +6,49 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Ice;
+using System.Windows.Threading;
+using System.Collections.ObjectModel;
 
 namespace MumbleStalkerWin {
 
-    public class Server: INotifyPropertyChanged {
+    public class Server: ModelObject {
         #region Public Properties
 
-        private string _server;
         public string Name {
+            get;
+            private set;
+        }
+
+        public int ID {
             get {
-                return _server;
-            }
-            set {
-                _server = value;
-                Meta = null;
-                NotifyPropertyChanged();
-                Refresh();
+                return Proxy.id();
             }
         }
 
-        public string Users {
+        public string NumUsers {
             get {
-                if (Meta == null) {
-                    return "???";
-                } else if (UserNames == null) {
-                    return "0";
-                } else {
-                    return UserNames.Length.ToString();
+                lock(this) {
+                    if (Users == null) {
+                        return "???";
+                    } else {
+                        return Users.Count.ToString();
+                    }
                 }
             }
         }
 
-        private string[] _userNames;
-        public string[] UserNames {
+        private ObservableCollection<User> _users;
+        public ObservableCollection<User> Users {
             get {
-                return _userNames;
+                return _users;
             }
             set {
-                _userNames = value;
+                _users = value;
                 NotifyPropertyChanged();
-                NotifyPropertyChanged("Users");
+                NotifyPropertyChanged("NumUsers");
+                if (Users != null) {
+                    Users.CollectionChanged += OnUsersCollectionChanged;
+                }
             }
         }
 
@@ -53,106 +56,63 @@ namespace MumbleStalkerWin {
 
         #region Public Methods
 
-        public Server(Ice.Communicator ice, string name) {
-            IceCommunicator = ice;
+        public Server(Murmur.ServerPrx proxy, string name) {
+            Proxy = proxy;
             Name = name;
+            Refresh();
         }
 
         public void Refresh() {
-            if (
-                (IceCommunicator == null)
-                || String.IsNullOrEmpty(Name)
-                || (ConnectionAttempt != null)
-            ) {
-                return;
-            }
-            if (Meta == null) {
-                var endpoint = String.Format("Meta:tcp -h {0} -p 6502", Name);
-                var proxy = IceCommunicator.stringToProxy(endpoint);
-                ConnectionAttempt = proxy.begin_ice_getConnection();
-                ConnectionAttempt.whenCompleted(
-                    connection => {
-                        Meta = Murmur.MetaPrxHelper.checkedCast(proxy);
-                        ConnectionAttempt = null;
-                        Refresh();
+            try {
+                Proxy.begin_getUsers().whenCompleted(
+                    users => {
+                        CompleteGetUsers(users);
                     },
                     e => {
-                        System.Diagnostics.Debug.WriteLine("Could not connect to {0}: {1}", Name, e.ToString());
-                        ConnectionAttempt = null;
+                        System.Diagnostics.Debug.WriteLine("Could not get user dictionary for {0}: {1}", Name, e.ToString());
                     }
                 );
-            } else {
-                // TODO: Rather than poll an already-established connection,
-                // we could use addCallback on each server in order to
-                // update the list only when there are actual changes...
-                UserNames = null;
-                try {
-                    foreach (var server in Meta.getBootedServers()) {
-                        server.begin_getUsers().whenCompleted(
-                            users => {
-                                lock (this) {
-                                    var newUserNames = from user in users
-                                                       select user.Value.name;
-                                    if (UserNames == null) {
-                                        UserNames = newUserNames.ToArray();
-                                    } else {
-                                        UserNames = UserNames.Concat(newUserNames).ToArray();
-                                    }
-                                }
-                            },
-                            e => {
-                                System.Diagnostics.Debug.WriteLine("Could not get user dictionary for {0}: {1}", Name, e.ToString());
-                            }
-                        );
-                    }
-                } catch (Ice.Exception e) {
-                    System.Diagnostics.Debug.WriteLine("Error talking to {0}: {1}", Name, e.ToString());
-                    Meta = null;
+            } catch (Ice.Exception e) {
+                System.Diagnostics.Debug.WriteLine("Error talking to {0}: {1}", Name, e.ToString());
+                Proxy = null;
+            }
+        }
+
+        private void CompleteGetUsers(Dictionary<int, Murmur.User> users) {
+            if (!App.Current.Dispatcher.CheckAccess()) {
+                App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => CompleteGetUsers(users)));
+                return;
+            }
+            lock (this) {
+                if (Users == null) {
+                    Users = new ObservableCollection<User>();
+                }
+                foreach (var user in users) {
+                    Users.Add(new User(user.Value.name));
                 }
             }
         }
 
-        #endregion
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-
-        #region Private Methods
-
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnUsersCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
+            NotifyPropertyChanged("NumUsers");
         }
 
         #endregion
 
         #region Private Properties
 
-        private Ice.Communicator IceCommunicator {
-            get;
-            set;
-        }
-
-        private Murmur.MetaPrx _meta;
-        private Murmur.MetaPrx Meta {
+        private Murmur.ServerPrx _proxy;
+        private Murmur.ServerPrx Proxy {
             get {
-                return _meta;
+                return _proxy;
             }
             set {
-                _meta = value;
-                UserNames = null;
+                _proxy = value;
+                Users = null;
             }
-        }
-
-        private Ice.AsyncResult<Ice.Callback_Object_ice_getConnection> ConnectionAttempt {
-            get;
-            set;
         }
 
         #endregion
-
     }
 
 }
