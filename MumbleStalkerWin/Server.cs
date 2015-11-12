@@ -112,14 +112,6 @@ namespace MumbleStalkerWin {
             }
         }
 
-        private void ConnectionFailed(Ice.Exception ex) {
-            throw new NotImplementedException();
-        }
-
-        private void ConnectionCompleted(Connection ret__) {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region INotifyPropertyChanged
