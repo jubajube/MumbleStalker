@@ -8,7 +8,8 @@
         Title="Mumble Stalker" Height="350" Width="525" Icon="MumbleStalker.ico" ResizeMode="CanResizeWithGrip"
         UseLayoutRounding="True"
         Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
-        FocusManager.FocusedElement="{Binding ElementName=NewHostName}">
+        FocusManager.FocusedElement="{Binding ElementName=NewHostName}"
+        Closed="OnWindowClosed">
     <StackPanel Orientation="Vertical" Margin="10">
         <Grid>
             <Grid.CommandBindings>
@@ -23,7 +24,7 @@
             <TextBox Name="NewHostName" Grid.Column="1" TextChanged="OnNewHostNameTextChanged" VerticalAlignment="Center" Margin="0,0,10,0" />
             <Button Grid.Column="2" Content="Add" Command="local:Commands.Add" Width="75" IsDefault="True" />
         </Grid>
-        <DataGrid Name="HostList" ItemsSource="{Binding Hosts}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
+        <DataGrid Name="HostList" ItemsSource="{Binding Hosts}" SelectedItem="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=SelectedHost}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
             <DataGrid.CommandBindings>
                 <CommandBinding Command="local:Commands.Remove" Executed="OnRemoveHost" />
             </DataGrid.CommandBindings>
@@ -39,14 +40,15 @@
                 <DataGridTextColumn Header="Servers" Width="75" IsReadOnly="True" Binding="{Binding NumServers}" />
             </DataGrid.Columns>
         </DataGrid>
-        <DataGrid Name="ServerList" ItemsSource="{Binding ElementName=HostList, Path=SelectedItem.Servers}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
+        <DataGrid Name="ServerList" ItemsSource="{Binding ElementName=HostList, Path=SelectedItem.Servers}" SelectedItem="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=SelectedServer}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Width="75" IsReadOnly="True" Binding="{Binding ID}" />
+                <DataGridTextColumn Header="Server ID" Width="75" IsReadOnly="True" Binding="{Binding ID}" />
                 <DataGridTextColumn Header="Users" Width="*" IsReadOnly="True" Binding="{Binding NumUsers}" />
             </DataGrid.Columns>
         </DataGrid>
         <DataGrid ItemsSource="{Binding ElementName=ServerList, Path=SelectedItem.Users}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,0">
             <DataGrid.Columns>
+                <DataGridTextColumn Header="User ID" Width="75" IsReadOnly="True" Binding="{Binding ID}" />
                 <DataGridTextColumn Header="Name" Width="*" IsReadOnly="True" Binding="{Binding Name}" />
             </DataGrid.Columns>
         </DataGrid>

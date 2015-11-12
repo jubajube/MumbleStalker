@@ -9,7 +9,7 @@ using System.Windows.Threading;
 
 namespace MumbleStalkerWin {
 
-    public class Meta: ModelObject {
+    public sealed class Meta: ModelObject {
         #region Public Properties
 
         private string _name;
@@ -31,13 +31,17 @@ namespace MumbleStalkerWin {
 
         public string NumServers {
             get {
-                lock(this) {
-                    if (Proxy == null) {
-                        return "???";
-                    } else {
-                        return Servers.Count.ToString();
-                    }
+                if (!IsConnected) {
+                    return "???";
+                } else {
+                    return Servers.Count.ToString();
                 }
+            }
+        }
+
+        public bool IsConnected {
+            get {
+                return (Proxy != null);
             }
         }
 
@@ -66,48 +70,57 @@ namespace MumbleStalkerWin {
                 ConnectionAttempt = proxy.begin_ice_getConnection();
                 ConnectionAttempt.whenCompleted(
                     connection => {
-                        CompleteConnection(proxy);
+                        CompleteConnection(connection, proxy);
                     },
                     e => {
                         System.Diagnostics.Debug.WriteLine("Could not connect to {0}: {1}", Name, e.ToString());
                         ConnectionAttempt = null;
                     }
                 );
-            } else {
-                // TODO: Rather than poll an already-established connection,
-                // we could use addCallback on each server in order to
-                // update the list only when there are actual changes...
-                lock(this) {
-                    Servers.Clear();
-                    try {
-                        foreach (var serverProxy in Proxy.getBootedServers()) {
-                            var server = new Server(serverProxy, Name);
-                            Servers.Add(server);
-                        }
-                    } catch (Ice.Exception e) {
-                        System.Diagnostics.Debug.WriteLine("Error talking to {0}: {1}", Name, e.ToString());
-                        Proxy = null;
-                    }
-                }
             }
+        }
+
+        #endregion
+
+        #region ModelObject
+
+        protected override void DisposeUnmanagedState() {
+            ClearServers();
         }
 
         #endregion
 
         #region Private Methods
 
-        private void CompleteConnection(Ice.ObjectPrx proxy) {
+        private void CompleteConnection(Ice.Connection connection, Ice.ObjectPrx proxy) {
             if (!App.Current.Dispatcher.CheckAccess()) {
-                App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => CompleteConnection(proxy)));
+                App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => CompleteConnection(connection, proxy)));
                 return;
             }
+            var localAddress = (connection.getInfo() as Ice.TCPConnectionInfo).localAddress;
+            var clientEndpoint = String.Format("tcp -h {0}", localAddress);
             Proxy = Murmur.MetaPrxHelper.checkedCast(proxy);
             ConnectionAttempt = null;
-            Refresh();
+            try {
+                foreach (var serverProxy in Proxy.getBootedServers()) {
+                    var server = new Server(IceCommunicator, clientEndpoint, serverProxy, Name);
+                    Servers.Add(server);
+                }
+            } catch (Ice.Exception e) {
+                System.Diagnostics.Debug.WriteLine("Error talking to {0}: {1}", Name, e.ToString());
+                Proxy = null;
+            }
         }
 
         private void OnServersCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
             NotifyPropertyChanged("NumServers");
+        }
+
+        private void ClearServers() {
+            foreach (var server in Servers) {
+                server.Dispose();
+            }
+            Servers.Clear();
         }
 
         #endregion
@@ -126,7 +139,8 @@ namespace MumbleStalkerWin {
             }
             set {
                 _proxy = value;
-                Servers.Clear();
+                ClearServers();
+                NotifyPropertyChanged("IsConnected");
             }
         }
 

@@ -11,7 +11,7 @@ using System.Collections.ObjectModel;
 
 namespace MumbleStalkerWin {
 
-    public class Server: ModelObject {
+    public sealed class Server: ModelObject {
         #region Public Properties
 
         public string Name {
@@ -21,34 +21,22 @@ namespace MumbleStalkerWin {
 
         public int ID {
             get {
-                return Proxy.id();
+                // NOTE: id() requires a round-trip transaction with the
+                // server and so may block; consider using begin_id instead.
+                return ServerProxy.id();
             }
         }
 
-        public string NumUsers {
+        public int NumUsers {
             get {
-                lock(this) {
-                    if (Users == null) {
-                        return "???";
-                    } else {
-                        return Users.Count.ToString();
-                    }
-                }
+                return Users.Count;
             }
         }
 
-        private ObservableCollection<User> _users;
+        private ObservableCollection<User> _users = new ObservableCollection<User>();
         public ObservableCollection<User> Users {
             get {
                 return _users;
-            }
-            set {
-                _users = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged("NumUsers");
-                if (Users != null) {
-                    Users.CollectionChanged += OnUsersCollectionChanged;
-                }
             }
         }
 
@@ -56,15 +44,24 @@ namespace MumbleStalkerWin {
 
         #region Public Methods
 
-        public Server(Murmur.ServerPrx proxy, string name) {
-            Proxy = proxy;
+        public Server(Ice.Communicator iceCommunicator, string clientEndpoint, Murmur.ServerPrx proxy, string name) {
+            Users.CollectionChanged += OnUsersCollectionChanged;
+            ServerProxy = proxy;
             Name = name;
-            Refresh();
-        }
-
-        public void Refresh() {
             try {
-                Proxy.begin_getUsers().whenCompleted(
+                var servant = new ServerCallback(this);
+                var adapter = iceCommunicator.createObjectAdapterWithEndpoints("", clientEndpoint);
+                var servantProxy = adapter.addWithUUID(servant);
+                ServerCallbackProxy = Murmur.ServerCallbackPrxHelper.checkedCast(servantProxy);
+                adapter.activate();
+
+                // TODO: Allow user to provide Ice secret
+                var context = new Dictionary<string, string>();
+                context["secret"] = "";
+
+                ServerProxy.ice_getConnection().setAdapter(adapter);
+                ServerProxy.addCallback(ServerCallbackProxy, context);
+                ServerProxy.begin_getUsers().whenCompleted(
                     users => {
                         CompleteGetUsers(users);
                     },
@@ -74,21 +71,58 @@ namespace MumbleStalkerWin {
                 );
             } catch (Ice.Exception e) {
                 System.Diagnostics.Debug.WriteLine("Error talking to {0}: {1}", Name, e.ToString());
-                Proxy = null;
             }
         }
+
+        public void OnUserConnected(Murmur.User user) {
+            if (!App.Current.Dispatcher.CheckAccess()) {
+                App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => OnUserConnected(user)));
+                return;
+            }
+            CheckedAddUser(user);
+        }
+
+        public void OnUserDisconnected(Murmur.User user) {
+            if (!App.Current.Dispatcher.CheckAccess()) {
+                App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => OnUserDisconnected(user)));
+                return;
+            }
+            CheckedRemoveUser(user);
+        }
+
+        #endregion
+
+        #region ModelObject
+
+        protected override void DisposeUnmanagedState() {
+            ServerProxy?.removeCallback(ServerCallbackProxy);
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private void CompleteGetUsers(Dictionary<int, Murmur.User> users) {
             if (!App.Current.Dispatcher.CheckAccess()) {
                 App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => CompleteGetUsers(users)));
                 return;
             }
-            lock (this) {
-                if (Users == null) {
-                    Users = new ObservableCollection<User>();
-                }
-                foreach (var user in users) {
-                    Users.Add(new User(user.Value.name));
+            foreach (var user in users) {
+                CheckedAddUser(user.Value);
+            }
+        }
+
+        private void CheckedAddUser(Murmur.User user) {
+            if (Users.Where(existingUser => existingUser.ID == user.userid).Count() == 0) {
+                Users.Add(new User(user));
+            }
+        }
+
+        private void CheckedRemoveUser(Murmur.User user) {
+            for (int i = 0; i < Users.Count; ++i) {
+                if (Users[i].ID == user.userid) {
+                    Users.RemoveAt(i);
+                    break;
                 }
             }
         }
@@ -101,15 +135,14 @@ namespace MumbleStalkerWin {
 
         #region Private Properties
 
-        private Murmur.ServerPrx _proxy;
-        private Murmur.ServerPrx Proxy {
-            get {
-                return _proxy;
-            }
-            set {
-                _proxy = value;
-                Users = null;
-            }
+        private Murmur.ServerPrx ServerProxy {
+            get;
+            set;
+        }
+
+        private Murmur.ServerCallbackPrx ServerCallbackProxy {
+            get;
+            set;
         }
 
         #endregion

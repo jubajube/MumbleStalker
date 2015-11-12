@@ -64,6 +64,7 @@
     <Compile Include="ModelObject.cs" />
     <Compile Include="Meta.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="ServerCallback.cs" />
     <Compile Include="StringArrayTooltipConverter.cs" />
     <Compile Include="User.cs" />
     <Page Include="MainWindow.xaml">

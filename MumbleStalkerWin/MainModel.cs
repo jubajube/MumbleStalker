@@ -11,7 +11,7 @@ using System.Windows.Threading;
 
 namespace MumbleStalkerWin {
 
-    public class MainModel: ModelObject {
+    public sealed class MainModel: ModelObject {
 
         #region Public Properties
 
@@ -47,7 +47,18 @@ namespace MumbleStalkerWin {
         }
 
         public void Remove(Meta host) {
+            host.Dispose();
             Hosts.Remove(host);
+        }
+
+        #endregion
+
+        #region ModelObject
+
+        protected override void DisposeUnmanagedState() {
+            foreach (var host in Hosts) {
+                host.Dispose();
+            }
         }
 
         #endregion
