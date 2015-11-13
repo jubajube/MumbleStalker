@@ -113,14 +113,16 @@ namespace MumbleStalkerWin {
         }
 
         private void CheckedAddUser(Murmur.User user) {
-            if (Users.Where(existingUser => existingUser.ID == user.userid).Count() == 0) {
-                Users.Add(new User(user));
+            var newUser = new User(user);
+            if (Users.Where(existingUser => existingUser == newUser).Count() == 0) {
+                Users.Add(newUser);
             }
         }
 
         private void CheckedRemoveUser(Murmur.User user) {
+            var oldUser = new User(user);
             for (int i = 0; i < Users.Count; ++i) {
-                if (Users[i].ID == user.userid) {
+                if (Users[i] == oldUser) {
                     Users.RemoveAt(i);
                     break;
                 }

@@ -31,6 +31,24 @@ namespace MumbleStalkerWin {
 
         #endregion
 
+        #region Object
+
+        public override bool Equals(object obj) {
+            var other = obj as User;
+            if (other == null) {
+                return false;
+            }
+            if (ID != other.ID) {
+                return false;
+            }
+            if (Name != other.Name) {
+                return false;
+            }
+            return true;
+        }
+
+        #endregion
+
         #region Private Properties
 
         private Murmur.User UserInfo {
