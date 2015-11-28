@@ -11,7 +11,7 @@ import os
 Import("platformEnvironments")
 
 # Import other projects in the workspace on which this project depends.
-Import("PiSlicer")
+#Import("<other project name>")
 
 # This is the name of the project, used to form the names of build products
 # such as the executable file name and the name of the directory
@@ -46,6 +46,9 @@ platforms = {
         "localLibraryDependencies": [
         ],
         "systemLibraryDependencies": [
+            "Ice",
+            "IceUtil",
+            "pthread",
         ],
     },
 }
@@ -59,6 +62,8 @@ for platform in platforms:
     if platform not in platformEnvironments:
         continue
     env = platformEnvironments[platform].Clone()
+    env.Append(CPPPATH = ["generated"])
+    env.Append(SOURCE_DIRECTORIES = ["generated"])
     products[platform] = env.ProgramProject(
         name,
         platform,
