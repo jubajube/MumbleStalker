@@ -1,7 +1,6 @@
 ipch/
 generated/
-Debug*/
-Release*/
+/Build/
 *.opensdf
 *.sdf
 *.suo

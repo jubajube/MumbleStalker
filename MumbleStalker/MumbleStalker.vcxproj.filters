@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Slice Files">
+      <UniqueIdentifier>{599761f4-cbed-4222-a659-b1836b68a27f}</UniqueIdentifier>
+      <Extensions>ice</Extensions>
+    </Filter>
+    <Filter Include="Ice Runtime">
+      <UniqueIdentifier>{02384c28-8860-40cd-b1bc-bc5b484d8d9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Debug">
+      <UniqueIdentifier>{6e5d5f29-4e5a-498f-b1ba-df958666a54f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Debug\Win32">
+      <UniqueIdentifier>{bca0ac1c-f7b0-49d0-82d4-7efe3df542f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Release">
+      <UniqueIdentifier>{7cd1eb97-fbac-481c-81a3-48253324a8bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Release\Win32">
+      <UniqueIdentifier>{d7ef138a-58fe-4e7e-9654-1b284c7cee66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Debug\x64">
+      <UniqueIdentifier>{999a6393-7039-4f8e-a850-1fd1f622d674}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ice Runtime\Release\x64">
+      <UniqueIdentifier>{488164a1-b448-4958-9df8-ac4c472d976c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MumbleStalker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\Murmur.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <IceBuilder Include="..\vendor\ice\Murmur.ice">
+      <Filter>Slice Files</Filter>
+    </IceBuilder>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="generated\Murmur.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\bzip2d.dll">
+      <Filter>Ice Runtime\Debug\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\iceutil36d.dll">
+      <Filter>Ice Runtime\Debug\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\ice36d.dll">
+      <Filter>Ice Runtime\Debug\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\ice36d.dll">
+      <Filter>Ice Runtime\Debug\x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\iceutil36d.dll">
+      <Filter>Ice Runtime\Debug\x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\bzip2d.dll">
+      <Filter>Ice Runtime\Debug\x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\iceutil36.dll">
+      <Filter>Ice Runtime\Release\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\bzip2.dll">
+      <Filter>Ice Runtime\Release\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\ice36.dll">
+      <Filter>Ice Runtime\Release\Win32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\iceutil36.dll">
+      <Filter>Ice Runtime\Release\x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\bzip2.dll">
+      <Filter>Ice Runtime\Release\x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(ICE_HOME)\bin\vc140\x64\ice36.dll">
+      <Filter>Ice Runtime\Release\x64</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
