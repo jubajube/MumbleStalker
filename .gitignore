@@ -5,5 +5,7 @@ generated/
 *.sdf
 *.suo
 *.xccheckout
+*.user
 xcuserdata/
 Thumbs.db
+.sconsign.dblite
