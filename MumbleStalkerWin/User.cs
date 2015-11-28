@@ -47,6 +47,10 @@ namespace MumbleStalkerWin {
             return true;
         }
 
+        public override int GetHashCode() {
+            return ID.GetHashCode() + Name.GetHashCode();
+        }
+
         #endregion
 
         #region Private Properties
