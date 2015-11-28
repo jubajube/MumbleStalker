@@ -96,7 +96,6 @@ root = Environment(
     ],
     CXXFLAGS = [
         "-std=c++11",
-        "-fno-exceptions",
     ],
     CPPDEFINES = [
         "__STDC_FORMAT_MACROS",
