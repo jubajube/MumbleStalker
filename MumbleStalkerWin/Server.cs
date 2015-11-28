@@ -122,7 +122,7 @@ namespace MumbleStalkerWin {
         private void CheckedRemoveUser(Murmur.User user) {
             var oldUser = new User(user);
             for (int i = 0; i < Users.Count; ++i) {
-                if (Users[i] == oldUser) {
+                if (Users[i].Equals(oldUser)) {
                     Users.RemoveAt(i);
                     break;
                 }
