@@ -48,7 +48,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <IceBuilder Include="..\vendor\ice\Murmur.ice">
+    <IceBuilder Include="$(SolutionDir)vendor\ice\Murmur.ice">
       <Filter>Slice Files</Filter>
     </IceBuilder>
   </ItemGroup>
