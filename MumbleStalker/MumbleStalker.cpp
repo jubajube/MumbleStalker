@@ -5,7 +5,6 @@
 #include <libdaemon/dsignal.h>
 #include <libdaemon/dlog.h>
 #include <libdaemon/dpid.h>
-#include <libdaemon/dexec.h>
 #include <list>
 #include <Murmur.h>
 #include <mutex>
