@@ -35,6 +35,10 @@ localLibraryDependencies = {
 # If the project depends on additional system libraries,
 # list their names here.
 systemLibraryDependencies = [
+    "Ice",
+    "IceUtil",
+    "daemon",
+    "pthread",
 ]
 
 # List all supported platforms here.
@@ -46,9 +50,6 @@ platforms = {
         "localLibraryDependencies": [
         ],
         "systemLibraryDependencies": [
-            "Ice",
-            "IceUtil",
-            "pthread",
         ],
     },
 }
