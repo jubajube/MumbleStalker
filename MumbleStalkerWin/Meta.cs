@@ -65,7 +65,7 @@ namespace MumbleStalkerWin {
                 return;
             }
             if (Proxy == null) {
-                var endpoint = String.Format("Meta:tcp -h {0} -p 6502", Name);
+                var endpoint = String.Format("Meta:tcp -h {0} -p 6502 -t 1000", Name);
                 var proxy = IceCommunicator.stringToProxy(endpoint);
                 ConnectionAttempt = proxy.begin_ice_getConnection();
                 ConnectionAttempt.whenCompleted(
@@ -98,7 +98,7 @@ namespace MumbleStalkerWin {
                 return;
             }
             var localAddress = (connection.getInfo() as Ice.TCPConnectionInfo).localAddress;
-            var clientEndpoint = String.Format("tcp -h {0}", localAddress);
+            var clientEndpoint = String.Format("tcp -h {0} -t 1000", localAddress);
             Proxy = Murmur.MetaPrxHelper.checkedCast(proxy);
             ConnectionAttempt = null;
             try {
