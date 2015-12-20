@@ -90,6 +90,10 @@ struct ProgramState {
         SetCounter((int)users.size());
     }
 
+    ProgramState() {
+        SetCounter(0);
+    }
+
     ~ProgramState() {
         if (server && serverCallback && serverCallbackAdded) {
             server->removeCallback(serverCallback);
@@ -100,6 +104,7 @@ struct ProgramState {
             } catch(...) {
             }
         }
+        SetCounter(-1);
     }
 };
 
@@ -268,7 +273,6 @@ int main(int argc, char* argv[]) {
         }
 
         const int fd = daemon_signal_fd();
-        state.SetCounter(0);
         while (!state.quit) {
             fd_set fds;
             FD_ZERO(&fds);
@@ -316,7 +320,6 @@ int main(int argc, char* argv[]) {
             buf << "]";
             daemon_log(LOG_INFO, "%s", buf.str().c_str());
         }
-        state.SetCounter(-1);
         daemon_log(LOG_INFO, "Done.");
     } catch (const Ice::Exception& e) {
         daemon_log(LOG_ERR, "error: %s", e.what());
