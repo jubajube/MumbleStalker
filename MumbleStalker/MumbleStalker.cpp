@@ -1,5 +1,6 @@
 #include <condition_variable>
 #include <errno.h>
+#include <fcntl.h>
 #include <Ice/Ice.h>
 #include <libdaemon/dfork.h>
 #include <libdaemon/dsignal.h>
@@ -10,14 +11,128 @@
 #include <mutex>
 #include <signal.h>
 #include <sstream>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/unistd.h>
+#include <unistd.h>
+
+static const uint16_t FONT[96] = {
+    // 0x20 - 0x2F
+    0x0000, // ' '
+    0x1509, // '!'
+    0x0202, // '"'
+    0x12C6, // '#'
+    0x12ED, // '$'
+    0x0C24, // '%'
+    0x2559, // '&'
+    0x0400, // '\''
+    0x2400, // '('
+    0x0900, // ')'
+    0x3FC0, // '*'
+    0x12C0, // '+'
+    0x0800, // ','
+    0x00C0, // '-'
+    0x4000, // '.'
+    0x0C00, // '/'
+
+    // 0x30 - 0x3F
+    0x0C3F, // '0'
+    0x0406, // '1'
+    0x00DB, // '2'
+    0x00CF, // '3'
+    0x00E6, // '4'
+    0x2069, // '5'
+    0x00FD, // '6'
+    0x14C1, // '7'
+    0x00FF, // '8'
+    0x00EF, // '9'
+    0x1200, // ':'
+    0x0A00, // ';'
+    0x0C08, // '<'
+    0x00C8, // '='
+    0x2108, // '>'
+    0x10A3, // '?'
+
+    // 0x40 - 0x4F
+    0x02BB, // '@'
+    0x00F7, // 'A'
+    0x128F, // 'B'
+    0x0039, // 'C'
+    0x120F, // 'D'
+    0x00F9, // 'E'
+    0x00F1, // 'F'
+    0x00BD, // 'G'
+    0x00F6, // 'H'
+    0x1209, // 'I'
+    0x001E, // 'J'
+    0x2470, // 'K'
+    0x0038, // 'L'
+    0x0536, // 'M'
+    0x2136, // 'N'
+    0x003F, // 'O'
+
+    // 0x50 - 0x5F
+    0x00F3, // 'P'
+    0x203F, // 'Q'
+    0x20F3, // 'R'
+    0x00ED, // 'S'
+    0x1201, // 'T'
+    0x003E, // 'U'
+    0x0C30, // 'V'
+    0x2836, // 'W'
+    0x2D00, // 'X'
+    0x1500, // 'Y'
+    0x0C09, // 'Z'
+    0x0949, // '['
+    0x2100, // '\'
+    0x2489, // ']'
+    0x0402, // '^'
+    0x0008, // '_'
+
+    // 0x60 - 0x6F
+    0x0100, // '`'
+    0x00DF, // 'a'
+    0x00FC, // 'b'
+    0x00D8, // 'c'
+    0x00DE, // 'd'
+    0x00FB, // 'e'
+    0x14C0, // 'f'
+    0x018F, // 'g'
+    0x00F4, // 'h'
+    0x1000, // 'i'
+    0x000C, // 'j'
+    0x3600, // 'k'
+    0x1208, // 'l'
+    0x10D4, // 'm'
+    0x2050, // 'n'
+    0x00DC, // 'o'
+
+    // 0x70 - 0x7F
+    0x0471, // 'p'
+    0x0187, // 'q'
+    0x00D0, // 'r'
+    0x2088, // 's'
+    0x0078, // 't'
+    0x001C, // 'u'
+    0x0810, // 'v'
+    0x2814, // 'w'
+    0xADC0, // 'x'
+    0x028E, // 'y'
+    0x0848, // 'z'
+    0x2480, // '{'
+    0x0030, // '|'
+    0x0940, // '}'
+    0x0001, // '~'
+    0x3FFF  // DEL
+};
 
 struct User {
     std::string name;
@@ -49,6 +164,7 @@ struct ProgramState {
     std::list< User > users;
     bool quit = false;
     std::mutex mutex;
+    uint16_t* framebuffer = (uint16_t*)MAP_FAILED;
 
     void FormClientEndpoint(const std::string& localAddress) {
         std::ostringstream buf;
@@ -57,6 +173,13 @@ struct ProgramState {
     }
 
     void SetCounter(int count) {
+        if (framebuffer != (uint16_t*)MAP_FAILED) {
+            char digits[5];
+            sprintf(digits, "%4d", count);
+            for (int i = 0; i < 4; ++i) {
+                framebuffer[i] = FONT[digits[i] - 32];
+            }
+        }
         FILE* digits = fopen("/sys/devices/platform/soc/soc:gpio-segled/panel0/digits", "w");
         if (digits != NULL) {
             if (count >= 0) {
@@ -91,6 +214,11 @@ struct ProgramState {
     }
 
     ProgramState() {
+        int fp = open("/dev/fb1", O_RDWR);
+        if (fp != 0) {
+            framebuffer = (uint16_t*)mmap(NULL, 8, PROT_READ | PROT_WRITE, MAP_SHARED, fp, 0);
+            (void)close(fp);
+        }
         SetCounter(0);
     }
 
