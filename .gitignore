@@ -1,7 +1,8 @@
 ipch/
 generated/
 /Build/
-*.opendb
+*.VC.db
+*.VC.opendb
 *.opensdf
 *.sdf
 *.suo
